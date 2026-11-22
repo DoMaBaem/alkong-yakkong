@@ -40,7 +40,7 @@ def api_error(code, message, key):
     # URLs and query strings may include credentials, so omit them entirely.
     if message and not re.search(r"https?://|servicekey\s*=", message, re.I):
         detail += f" · {message[:180]}"
-    elif code == "11":
+    if code == "11":
         detail += " · 필수 요청값을 확인하세요."
     return detail
 
@@ -175,31 +175,10 @@ def collect(kind, endpoint, key, output, page_size, max_pages, include_all, type
             "complete": scanned == total, "otc_only": not include_all}
 
 
-def read_service_key():
-    key = os.environ.get("DUR_SERVICE_KEY", "").strip()
-    if key:
-        return key
-    config_path = Path(__file__).resolve().with_name(".env")
-    try:
-        lines = config_path.read_text(encoding="utf-8-sig").splitlines()
-    except FileNotFoundError:
-        return ""
-    except (OSError, UnicodeError):
-        raise CollectionError("collect_dur.py 옆의 .env 파일을 UTF-8로 저장했는지 확인하세요.") from None
-    for line in lines:
-        name, separator, value = line.partition("=")
-        if separator and name.strip() == "DUR_SERVICE_KEY":
-            value = value.strip()
-            if len(value) >= 2 and value[0] in {'"', "'"} and value[-1] == value[0]:
-                value = value[1:-1].strip()
-            return value
-    return ""
-
-
 def main():
     parser = argparse.ArgumentParser(description="식약처 DUR 병용·임부·연령금기 CSV 다운로드")
     parser.add_argument("output_dir", nargs="?", type=Path, default=Path("dur_csv"))
-    parser.add_argument("--page-size", type=int, default=500, help="페이지당 요청 건수 (기본값 500)")
+    parser.add_argument("--page-size", type=int, default=1000)
     parser.add_argument("--max-pages", type=int, help="연결 확인 시 유형별 최대 페이지 수")
     parser.add_argument("--include-all", action="store_true", help="일반약 선별 없이 응답 전체를 저장")
     parser.add_argument("--kind", choices=ENDPOINTS, help="지정한 금기 유형 하나만 조회")
@@ -212,14 +191,11 @@ def main():
     target = args.output_dir.resolve()
     if target.exists():
         parser.error("새 출력 폴더를 지정하세요.")
-    try:
-        key = read_service_key()
-    except CollectionError as error:
-        parser.exit(1, f"수집 실패: {error}\n")
+    key = os.environ.get("DUR_SERVICE_KEY", "").strip()
     if not key and sys.stdin.isatty():
         key = getpass.getpass("공공데이터포털 DUR 서비스 키: ").strip()
     if not key:
-        parser.error(".env, DUR_SERVICE_KEY 환경 변수 또는 터미널의 숨김 입력으로 키를 제공하세요.")
+        parser.error("DUR_SERVICE_KEY 환경 변수 또는 터미널의 숨김 입력으로 키를 제공하세요.")
     key = unquote(key)
 
     target.parent.mkdir(parents=True, exist_ok=True)
