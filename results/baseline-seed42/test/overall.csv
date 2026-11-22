@@ -1,0 +1,3 @@
+﻿split,demo,model,n,rouge_l,bertscore_f1,faithfulness,faithfulness_n,empty_n,refusal_flag_n,token_cap_n,no_claims_n,no_evidence_n,judge_error_n,deferral_expected_n,deferral_scored_n,deferral_success_n,deferral_success_rate,deferral_judge_error_n
+test,False,kakaocorp/kanana-2-3b-instruct,100,0.038961613446400346,0.6348621827363968,0.39207329022143833,81,0,0,33,0,3,16,29,29,19.0,0.6551724137931034,0
+test,False,Qwen/Qwen3.5-2B,100,0.07520091000116501,0.7041895765066147,0.8118742368742369,91,0,0,5,1,3,5,29,29,20.0,0.6896551724137931,0
