@@ -1,0 +1,5 @@
+# 원천 DUR 데이터 (용량·이용 약관 문제로 커밋하지 않음)
+dur_*.json
+dur_*.jsonl
+**/dur_*.json
+**/dur_*.jsonl
