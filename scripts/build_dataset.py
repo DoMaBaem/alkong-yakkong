@@ -41,6 +41,8 @@ PREG_TARGET = {"설명": 100, "추가 질문": 60, "판단 보류": 80}
 OTHER_TARGET = {"설명": 64, "추가 질문": 32, "판단 보류": 64}
 AGE_PER_PRODUCT = ["설명", "판단 보류", "판단 보류"]
 RTYPES = ["설명", "추가 질문", "판단 보류"]
+# 원문 사유가 짧아 답변이 단조로운 임부금기 그룹은 문항 수를 제한하고, 남는 수량은 다른 그룹으로 나눈다
+PREG_GROUP_CAP = {"ethinyl": 9}  # 에티닐 에스트라디올(사유: "피임제")
 
 # 원문이 잘렸거나 제형별 조각만 남아 사유 풀이가 어려운 임부금기 성분은 제외
 PREG_EXCLUDE = {"sodium", "iodine"}
@@ -915,7 +917,7 @@ def build_train(data, frozen, seed):
     c_types = assign_types(rng, c_alloc, combo_target)
     for key in sorted(combo):
         samples += make_combo_group(random.Random(f"{seed}-{key}"), key, combo[key], c_types[key], seen_q)
-    p_alloc = water_fill({k: len(v) for k, v in preg.items()}, n_preg)
+    p_alloc = water_fill({k: min(len(v), PREG_GROUP_CAP.get(k, len(v))) for k, v in preg.items()}, n_preg)
     p_types = assign_types(rng, p_alloc, PREG_TARGET)
     for key in sorted(preg):
         if p_alloc[key]:
