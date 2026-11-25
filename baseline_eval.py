@@ -21,6 +21,7 @@ from pathlib import Path
 MODELS = ["kakaocorp/kanana-2-3b-instruct", "Qwen/Qwen3.5-2B"]
 JUDGE = "Qwen/Qwen3.5-4B"
 ENCODER = "bert-base-multilingual-cased"
+DEFAULT_SEED = 42
 METRIC_LABELS = {
     "rouge_l": "ROUGE-L F1",
     "bertscore_f1": "BERTScore F1",
@@ -215,7 +216,7 @@ def empty_cache():
 
 def evaluate(path, output, *, split="validation", models=None, judge_name=JUDGE,
              encoder=ENCODER, max_new_tokens=256, judge_tokens=768,
-             limit=None, demo=False, revisions=None):
+             limit=None, demo=False, revisions=None, seed=DEFAULT_SEED):
     output = Path(output)
     if output.exists():
         raise FileExistsError(f"새 결과 폴더를 지정하세요: {output}")
@@ -230,8 +231,16 @@ def evaluate(path, output, *, split="validation", models=None, judge_name=JUDGE,
         rows = rows[:limit]
     if not demo and judge_name in models:
         raise ValueError("후보 모델과 별도의 채점 모델을 지정하세요.")
+    if not 0 <= seed < 2**32:
+        raise ValueError("시드는 0 이상 2**32 미만이어야 합니다.")
+    if not demo:
+        from transformers import set_seed
+
+        set_seed(seed)
+
     output.mkdir(parents=True)
     metadata = dict(split=split, demo=demo, limit=limit, sample_count=len(rows),
+                    seed=None if demo else seed,
                     dataset_sha256=hashlib.sha256(Path(path).read_bytes()).hexdigest(),
                     models=models, judge=judge_name, encoder=encoder, max_new_tokens=max_new_tokens,
                     judge_tokens=judge_tokens, quantization="4-bit NF4", decoding="greedy",
@@ -383,7 +392,9 @@ if __name__ == "__main__":
     parser.add_argument("--demo", action="store_true")
     parser.add_argument("--models", nargs="+", default=MODELS)
     parser.add_argument("--judge", default=JUDGE)
+    parser.add_argument("--seed", type=int, default=DEFAULT_SEED,
+                        help="실측 평가의 난수 시드 (기본값: %(default)s)")
     args = parser.parse_args()
     overall, _, _ = evaluate(args.dataset, args.output, split=args.split, limit=args.limit,
-                              demo=args.demo, models=args.models, judge_name=args.judge)
+                              demo=args.demo, models=args.models, judge_name=args.judge, seed=args.seed)
     print(overall.to_string(index=False))
