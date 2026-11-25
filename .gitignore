@@ -3,3 +3,7 @@ dur_*.json
 dur_*.jsonl
 **/dur_*.json
 **/dur_*.jsonl
+
+# 파이썬 캐시
+__pycache__/
+*.pyc
