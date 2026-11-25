@@ -964,6 +964,7 @@ def main():
     stats["train"] = split_stats(train)
     with open(os.path.join(a.out_dir, "stats.json"), "w", encoding="utf-8") as f:
         json.dump(stats, f, ensure_ascii=False, indent=2)
+        f.write("\n")
     print(json.dumps(stats, ensure_ascii=False, indent=2))
 
 
