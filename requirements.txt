@@ -4,6 +4,7 @@ torchvision
 transformers>=5.2,<6
 accelerate
 bitsandbytes
+peft>=0.14
 bert-score
 pandas
 matplotlib
